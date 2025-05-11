@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <style>
+    body {
+      font-family: 'Georgia', serif;
+      color: #333;
+      margin: 0;
+      padding: 0;
+    }
+    .container {
+      width: 100%;
+      max-width: 700px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 2px solid #2c3e50;
+      padding-bottom: 10px;
+      margin-bottom: 20px;
+    }
+    .header h1 {
+      font-size: 24px;
+      margin: 0;
+      color: #2c3e50;
+    }
+    .header .invoice-info {
+      text-align: right;
+      font-size: 14px;
+    }
+    .title {
+      text-align: center;
+      margin: 20px 0;
+    }
+    .title h2 {
+      font-size: 28px;
+      margin: 0;
+      color: #2c3e50;
+    }
+    .title p {
+      margin: 5px 0;
+      font-size: 14px;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 20px;
+    }
+    th, td {
+      border: 1px solid #ddd;
+      padding: 8px;
+      text-align: left;
+      font-size: 14px;
+    }
+    th {
+      background-color: #e0e0e0;
+      font-weight: bold;
+      color: #2c3e50;
+    }
+    .total-row {
+      font-weight: bold;
+      text-align: right;
+    }
+    .footer {
+      text-align: center;
+      margin-top: 20px;
+      font-size: 12px;
+      color: #555;
+      border-top: 1px solid #ddd;
+      padding-top: 10px;
+    }
+    .thank-you {
+      text-align: center;
+      margin-top: 20px;
+      font-size: 14px;
+      font-style: italic;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>Hotel Amin International</h1>
+      <div class="invoice-info">
+        Invoice #{{booking_id}}<br>
+        1234 Serenity Lane, Paradise City<br>
+        +1-555-123-4567 | info@amininternation.com
+      </div>
+    </div>
+
+    <div class="title">
+      <h2>Guest Invoice</h2>
+      <p>Hotel Amin International</p>
+      <p>Issued on: {{issued_date}}</p>
+    </div>
+
+    <h3>Booking Details</h3>
+    <table>
+      <tr>
+        <th>Check-in Date</th>
+        <th>Check-out Date</th>
+        <th>Guests</th>
+        <th>Total ($)</th>
+        <th>Room Numbers</th>
+      </tr>
+      <tr>
+        <td>{{checkin_date}}</td>
+        <td>{{checkout_date}}</td>
+        <td>{{number_of_guests}}</td>
+        <td>{{total_price}}</td>
+        <td>{{room_num}}</td>
+      </tr>
+    </table>
+
+    <h3>Payment Details</h3>
+    <table>
+      <tr>
+        <th>Total ($)</th>
+        <th>Paid ($)</th>
+        <th>Due ($)</th>
+        <th>Payment Date</th>
+        <th>Payment Type</th>
+      </tr>
+      {{#each accounts}}
+      <tr>
+        <td>{{total_price}}</td>
+        <td>{{paid}}</td>
+        <td>{{due}}</td>
+        <td>{{payment_date}}</td>
+        <td>{{payment_type}}</td>
+      </tr>
+      {{/each}}
+    </table>
+
+    <h3>Restaurant Charges</h3>
+    {{#if restaurant_history}}
+    <table>
+      <tr>
+        <th>Order ID</th>
+        <th>Food Item</th>
+        <th>Quantity</th>
+        <th>Total ($)</th>
+      </tr>
+      {{#each restaurant_history}}
+      <tr>
+        <td>{{order_id}}</td>
+        <td>{{food_name}}</td>
+        <td>{{quantity}}</td>
+        <td>{{total}}</td>
+      </tr>
+      {{/each}}
+      <tr class="total-row">
+        <td colspan="3">Total Restaurant Charges</td>
+        <td>{{restaurant_total}}</td>
+      </tr>
+    </table>
+    {{else}}
+    <p><i>No restaurant charges recorded.</i></p>
+    {{/if}}
+
+    <div class="thank-you">
+      Thank you for staying at Hotel Amin International!<br>
+      Please settle any outstanding balance at checkout.
+    </div>
+
+    <div class="footer">
+      1234 Serenity Lane, Paradise City | +1-555-123-4567 | info@amininternation.com
+    </div>
+  </div>
+</body>
+</html>

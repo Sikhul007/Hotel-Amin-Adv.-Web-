@@ -87,7 +87,7 @@ export class RestaurantService {
   async createRestaurantHistory(
     createRestaurantHistoryDto: CreateRestaurantHistoryDto,
   ): Promise<RestaurantHistory[]> {
-    const { items, booking_id, food_id, employee_id } =
+    const { items, booking_id, employee_id } =
       createRestaurantHistoryDto;
 
     // Validate booking_id
@@ -107,12 +107,12 @@ export class RestaurantService {
     }
 
     // Validate food_id
-    const food = await this.restaurantRepository.findOne({
-      where: { food_id },
-    });
-    if (!food) {
-      throw new NotFoundException(`Food with ID ${food_id} not found`);
-    }
+    // const food = await this.restaurantRepository.findOne({
+    //   where: { food_id },
+    // });
+    // if (!food) {
+    //   throw new NotFoundException(`Food with ID ${food_id} not found`);
+    // }
 
     // Transform items object into array of ItemQuantity objects
     const itemQuantities: { itemName: string; quantity: number }[] = [];

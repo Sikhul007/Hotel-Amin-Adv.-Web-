@@ -1,75 +1,77 @@
-import { Injectable, Logger,Inject } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
-import { Twilio } from 'twilio';
+import { Injectable } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+import * as nodemailer from 'nodemailer';
+import * as handlebars from 'handlebars';
+import * as fs from 'fs';
+import * as path from 'path';
 import { Reservation } from '../reservation/entities/reservation.entity';
-import { parsePhoneNumberWithError} from 'libphonenumber-js';
-import { CACHE_MANAGER,  } from '@nestjs/cache-manager';
-import { Cache } from 'cache-manager';
+import { User } from '../user/entities/user.entity';
 
 @Injectable()
 export class ConfirmationService {
-  private readonly logger = new Logger(ConfirmationService.name);
+  private transporter: nodemailer.Transporter;
 
   constructor(
-    @Inject('TWILIO_CLIENT')
-    private twilioClient: Twilio,
-    private configService: ConfigService,
-    @Inject(CACHE_MANAGER) private cacheManager: Cache,
-  ) {}
+    @InjectRepository(Reservation)
+    private reservationRepository: Repository<Reservation>,
+    @InjectRepository(User)
+    private userRepository: Repository<User>,
+  ) {
+    // Initialize Nodemailer transporter
+    this.transporter = nodemailer.createTransport({
+      host: process.env.EMAIL_HOST || 'smtp.gmail.com',
+      port: parseInt(process.env.EMAIL_PORT || '587'),
+      secure: false, // Use TLS
+      auth: {
+        user: process.env.EMAIL_USER || 'your.email@gmail.com',
+        pass: process.env.EMAIL_PASS || 'your_app_password',
+      },
+    });
+  }
 
   async sendReservationConfirmation(reservation: Reservation): Promise<void> {
-    const customer = reservation.user;
-    if (!customer?.phone) {
-      this.logger.warn(`No phone number for customer ID ${reservation.reservation_id}`);
-      return;
+    // Fetch user details
+    const user = await this.userRepository.findOne({
+      where: { user_id: reservation.user_id },
+    });
+
+    if (!user) {
+      throw new Error(`User with ID ${reservation.user_id} not found`);
     }
 
-    // Validate phone number
-    let phoneNumber: string;
-    try {
-      const parsed = parsePhoneNumberWithError(customer.phone, 'BD');
-      if (!parsed.isValid()) {
-        this.logger.warn(`Invalid phone number for customer ID ${reservation.reservation_id}: ${customer.phone}`);
-        return;
-      }
-      phoneNumber = parsed.format('E.164');
-    } catch (error) {
-      this.logger.warn(`Failed to parse phone number ${customer.phone}: ${error.message}`);
-      return;
-    }
+    // Load and compile email template
+    const templatePath = path.join(__dirname, '..', '..', 'templates', 'confirmation.hbs');
+    const templateSource = fs.readFileSync(templatePath, 'utf8');
+    const template = handlebars.compile(templateSource);
 
-    // Check rate limit (one SMS per reservation ID)
-    const cacheKey = `sms:reservation:${reservation.reservation_id}`;
-    const cached = await this.cacheManager.get(cacheKey);
-    if (cached) {
-      this.logger.warn(`SMS already sent for reservation ID ${reservation.reservation_id}`);
-      return;
-    }
+    // Prepare email data
+    const emailData = {
+      customerName: user.name,
+      booking_id: reservation.reservation_id,
+      checkin_date: reservation.checkin_date,
+      checkout_date: reservation.checkout_date,
+      room_num: reservation.room_num.join(', '),
+      number_of_guests: reservation.number_of_guests,
+      total_price: reservation.total_price,
+    };
 
-    const message = `
-      Dear ${customer.name},
-      Your reservation is confirmed!
-      Reservation ID: ${reservation.reservation_id}
-      Check-in: ${reservation.checkin_date.toISOString().split('T')[0]}
-      Check-out: ${reservation.checkout_date.toISOString().split('T')[0]}
-      Rooms: ${reservation.room_num.join(', ')}
-      Guests: ${reservation.number_of_guests}
-    
-      Thank you for choosing us!
-    `.trim();
+    const html = template(emailData);
+
+    // Send email
+    const mailOptions = {
+      from: `"Hotel Amin International" <${process.env.EMAIL_USER || 'your.email@gmail.com'}>`,
+      to: user.email,
+      subject: `Your Reservation Confirmation - Reservation #${reservation.reservation_id}`,
+      html,
+    };
 
     try {
-      await this.twilioClient.messages.create({
-        body: message,
-        from: this.configService.get<string>('TWILIO_PHONE_NUMBER'),
-        to: phoneNumber,
-      });
-      this.logger.log(`SMS sent to ${phoneNumber} for reservation ID ${reservation.reservation_id}`);
-      
-      // Set cache to prevent duplicate SMS (TTL: 24 hours)
-      await this.cacheManager.set(cacheKey, 'sent', 24 * 60 * 60 * 1000);
+      await this.transporter.sendMail(mailOptions);
+      console.log(`Confirmation email sent to ${user.email}`);
     } catch (error) {
-      this.logger.error(`Failed to send SMS to ${phoneNumber}: ${error.message}`);
+      console.error('Error sending email:', error);
+      throw new Error('Failed to send confirmation email');
     }
-  } 
+  }
 }

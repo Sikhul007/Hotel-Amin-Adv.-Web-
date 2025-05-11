@@ -19,9 +19,9 @@ export class CreateRestaurantHistoryDto {
   @IsNotEmpty()
   booking_id: number;
 
-  @IsInt()
-  @IsNotEmpty()
-  food_id: number;
+  // @IsInt()
+  // @IsNotEmpty()
+  // food_id: number;
 
   @IsInt()
   @IsNotEmpty()

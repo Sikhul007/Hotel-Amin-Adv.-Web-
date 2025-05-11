@@ -12,13 +12,16 @@ import { ManagementModule } from '../management/management.module';
 import { HousekeepingModule } from '../housekeeping/housekeeping.module';
 import { Customer } from './entities/customer.entity';
 import { ReservationModule } from '../reservation/reservation.module';
+import { RestaurantModule } from '../restaurant/restaurant.module';
+import { RestaurantHistory } from '../restaurant/entities/restaurant-history.entity';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Accounts, Booking,BookingHistory,Customer]),
+  imports: [TypeOrmModule.forFeature([Accounts, Booking,BookingHistory,Customer, RestaurantHistory]),
   forwardRef(() => UserModule),
   forwardRef(() =>RoomModule),
   forwardRef(() =>CouponModule),
   forwardRef(() =>ReservationModule),
+  forwardRef(() =>RestaurantModule),
   ManagementModule,HousekeepingModule,
   ],
 

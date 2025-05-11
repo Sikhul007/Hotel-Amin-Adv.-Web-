@@ -14,6 +14,10 @@ export class RestaurantHistory {
   @PrimaryGeneratedColumn()
   order_id: number;
 
+  //food id colum
+  @Column({ name: 'food_id' })
+  food_id: number;
+
   @ManyToOne(() => Restaurant, (restaurant) => restaurant.restaurantHistory)
   @JoinColumn({ name: 'food_id' })
   food: Restaurant;
@@ -26,6 +30,10 @@ export class RestaurantHistory {
 
   @Column({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
   order_date: Date;
+
+  //add colum for booking id
+  @Column({ name: 'booking_id' })
+  booking_id: number;
 
   @ManyToOne(() => Booking, (booking) => booking.restaurantHistory)
   @JoinColumn({ name: 'booking_id' })

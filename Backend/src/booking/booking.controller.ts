@@ -71,7 +71,20 @@ export class BookingController {
     return this.bookingService.viewAllBookingHistory();
   }
 
+  //search booking by inputing customer name
+  @Get('searchbyname/:customer_name')
+  async searchBookingByName(@Param('customer_name') customer_name: string) {
+    return this.bookingService.searchBookingByName(customer_name);
+  }
+  
 
+
+  @Get('due/:roomNum')
+  async getBookingDetailsByRoomNumber(
+    @Param('roomNum', ParseIntPipe) roomNum: number,
+  ){
+    return this.bookingService.getBookingDetailsByRoomNumber(roomNum);
+  }
 
 
   

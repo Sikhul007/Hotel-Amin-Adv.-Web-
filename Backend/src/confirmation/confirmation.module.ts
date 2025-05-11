@@ -1,30 +1,14 @@
-import { Module, forwardRef } from '@nestjs/common';
-import { ConfirmationController } from './confirmation.controller';
+import { Module } from '@nestjs/common';
+import { TypeOrmModule } from '@nestjs/typeorm';
 import { ConfirmationService } from './confirmation.service';
-import { BookingModule } from '../booking/booking.module';
-import { UserModule } from '../user/user.module';
-import { ConfigModule, ConfigService } from '@nestjs/config';
-import { CacheModule } from '@nestjs/cache-manager';
-import { Twilio } from 'twilio';
+import { ConfirmationController } from './confirmation.controller';
+import { Reservation } from '../reservation/entities/reservation.entity';
+import { User } from '../user/entities/user.entity';
 
 @Module({
-  imports: [ConfigModule,
-    CacheModule.register({ isGlobal: true }),
-    forwardRef(() => BookingModule), UserModule],
+  imports: [TypeOrmModule.forFeature([Reservation, User])],
+  providers: [ConfirmationService],
   controllers: [ConfirmationController],
-  providers: [
-    ConfirmationService,
-    {
-      provide: 'TWILIO_CLIENT',
-      useFactory: (configService: ConfigService) => {
-        const accountSid = configService.get<string>('TWILIO_ACCOUNT_SID');
-        const authToken = configService.get<string>('TWILIO_AUTH_TOKEN');
-        return new Twilio(accountSid, authToken);
-      },
-      inject: [ConfigService],
-    },
-    ConfirmationService],
-
   exports: [ConfirmationService],
 })
 export class ConfirmationModule {}

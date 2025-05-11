@@ -37,6 +37,9 @@ export class User {
   @CreateDateColumn({type: 'timestamp',default: () => 'CURRENT_TIMESTAMP',})
   registrationDate: Date;
 
+  @Column({ type: 'varchar', length: 50, default: 'user'})
+  role: string;
+
 
   @OneToMany(() => Feedback, (feedback) => feedback.user)
   feedbacks: Feedback[];
